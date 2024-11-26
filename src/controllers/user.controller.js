@@ -30,10 +30,7 @@ const generateAccessAndRefreshTokens = async(userId) => {
 }
 
 const registerUser = asyncHandler(async (req, res) => {
-    // res.status(200).json({
-    //     message: "ok"
-    // })
-    
+       
     // *****steps/ algorithm********
 
     // get user details from frontend
@@ -136,7 +133,8 @@ const loginUser = asyncHandler(async (req, res) => {
     // send cookies
 
     const {email, username, password} = req.body
-
+    console.log(email, username, password);
+    
     if (!username && !email) {
         throw new ApiError(400, "username or email is required");
     }
@@ -188,8 +186,8 @@ const logoutUser = asyncHandler(async (req, res) => {
     await User.findByIdAndUpdate(
         req.user._id,
         {
-            $set: {
-                refreshToken: undefined
+            $unset: {
+                refreshToken: 1 //this will remove field from document
             }
         },
         {
@@ -239,7 +237,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
         return res
         .status(200)
         .cookie("accessToken", accessToken, options)
-        .cookie("accessToken", newRefreshToken, options)
+        .cookie("refreshToken", newRefreshToken, options)
         .json(
             new ApiResponse(
                 200,
@@ -248,7 +246,7 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             )
         )
     } catch (error) {
-        throw new Error(401, error.message || "Invalid refresh token");
+        throw new ApiError(401, error.message || "Invalid refresh token");
     }
 
 })
@@ -441,7 +439,7 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     const user = await User.aggregate([
         {
             $match: {
-                _id: new mongoose.Types.ObjectId(req.user._id)
+                _id: new mongoose.Types.ObjectId(req.user._id) // because it goes directly not through mongoose which automatically handle _id provided strng
             }
         },
         {
@@ -461,7 +459,8 @@ const getWatchHistory = asyncHandler(async (req, res) => {
                                 {
                                     $project: {
                                         fullName: 1,
-                                        username: 1, avatar: 1
+                                        username: 1, 
+                                        avatar: 1
                                     }
                                 }
                             ]
@@ -490,6 +489,14 @@ const getWatchHistory = asyncHandler(async (req, res) => {
     )
 })
 
+// const getUsers = asyncHandler(async (req, res) => {
+//     const users = await User.find().select("-password")
+//     return res.status(200).json(new ApiResponse(
+//         200, users, "users fetched successfully"
+//     ))
+    
+// })
+
 export {
     registerUser, 
     loginUser,
@@ -500,5 +507,7 @@ export {
     updateAccountDetails,
     updateUserAvatar,
     updateUserCoverImage,
-    getUserChannelProfile
+    getUserChannelProfile,
+    getWatchHistory,
+    // getUsers
 }

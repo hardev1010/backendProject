@@ -42,6 +42,7 @@ const userSchema = new Schema(
         password: {
             type: String,
             required: [true, 'password is required']
+
         },
         refreshToken: {
             type: String
@@ -51,6 +52,7 @@ const userSchema = new Schema(
     {timestamps: true}
 )
 
+//used function instead of arrow because we need this access here
 userSchema.pre("save", async function (next) {
     if(!this.isModified("password")) return next();
 
