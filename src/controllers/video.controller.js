@@ -35,20 +35,27 @@ const getAllVideos = asyncHandler(async (req, res) => {
 const publishAVideo = asyncHandler(async (req, res) => {
     const { title, description} = req.body
     // TODO: get video, upload to cloudinary, create video
+    // console.log("voideo files", req.files);
 
-    if (!req.files || !req.files.videoFile || !req.files.thumbnail) {
+    const videoLocalPath = req.files?.videoFile[0].path
+    const thumbnailLocalPath = req.files?.thumbnail[0].path
+    // console.log(videoLocalPath, thumbnailLocalPath);
+    
+    if (!(videoLocalPath || thumbnailLocalPath)) {
         throw new ApiError(400, "Video file and thumbnail are required");
     }
 
-    const videoFile = await uploadOnCloudinary(req.files.videoFile[0].path, "video");
-    const thumbnail = await uploadOnCloudinary(req.files.thumbnail[0].path, "image");
+    const videoFile = await uploadOnCloudinary(videoLocalPath);
+    console.log("video uploaded");
+    
+    const thumbnail = await uploadOnCloudinary(thumbnailLocalPath);
 
     const newVideo = await Video.create({
         title,
         description,
         videoFile: videoFile.secure_url,
         thumbnail: thumbnail.secure_url,
-        duration: req.body.duration || 0,
+        duration: videoFile.duration || 0,
         owner: req.user._id
     });
 
@@ -63,7 +70,7 @@ const getVideoById = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID");
     }
 
-    const video = await Video.findById(videoId).populate("owner", "name email");
+    const video = await Video.findById(videoId).populate("owner", "name", "email");
     if (!video) {
         throw new ApiError(404, "Video not found");
     }
@@ -79,6 +86,7 @@ const updateVideo = asyncHandler(async (req, res) => {
         throw new ApiError(400, "Invalid video ID");
     }
 
+    //can simply pass object in query as done in user controller
     const updates = {};
     if (req.body.title) updates.title = req.body.title;
     if (req.body.description) updates.description = req.body.description;

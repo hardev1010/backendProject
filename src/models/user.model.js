@@ -30,8 +30,15 @@ const userSchema = new Schema(
             type: String, //cloudinary url
             required: true,
         },
+        avatarPublicId: {
+            type: String, //cloudinary public if for deletion
+            required: true
+        },
         coverImage: {
             type: String, //cloudinary url
+        },
+        coverImagePublicId: {
+            type: String, //cloudinary public if for deletion
         },
         watchHistory: [
             {
@@ -41,7 +48,7 @@ const userSchema = new Schema(
         ],
         password: {
             type: String,
-            required: [true, 'password is required']
+            required: [true, 'password is required'],
 
         },
         refreshToken: {
